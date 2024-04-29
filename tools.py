@@ -154,9 +154,13 @@ def replace_control():
 def freeze_control():
     controls = cmds.ls(sl=1, l=1, type=["joint", "transform"])
     for ctrl in controls:
-        Control(ctrl).edit_shape_by_copy_ctrl(lambda copy_ctrl:
-                                              cmds.xform(copy_ctrl, m=cmds.xform(ctrl, q=1, m=1)))
-        cmds.xform(ctrl, ws=0, m=[1, 0, 0, 0,
-                                  0, 1, 0, 0,
-                                  0, 0, 1, 0,
-                                  0, 0, 0, 1])
+        Control(ctrl).edit_shape_by_copy_ctrl(lambda copy_ctrl: cmds.xform(copy_ctrl, m=cmds.xform(ctrl, q=1, m=1)))
+        cmds.xform(ctrl, ws=0, m=[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+
+@undo
+def line_with_control(weight):
+    controls = cmds.listRelatives(cmds.ls(sl=1, l=1), s=1)
+    if not controls:
+        return
+    for shape in controls:
+        cmds.setAttr(shape + ".lineWidth", weight)

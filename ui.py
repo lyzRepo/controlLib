@@ -11,54 +11,53 @@ except ImportError:
 
 
 class ShapeList(QListWidget):
-    # 控制器列表
+    # controller list
     def __init__(self):
         QListWidget .__init__(self)
-        # 设置为图标模式
+        # set to logo mode
         self.setViewMode(self.IconMode)
-        # 设置禁止移动
+        # banned movement
         self.setMovement(self.Static)
-        # 隐藏横向滑条，显示竖向滑条
+        # Hide horizontal scroll bar, display vertical scroll bar
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # 设置图标尺寸
+        # set controller icon size
         self.setIconSize(QSize(64, 64))
-        # 设置图标排列实施更新
+        # open refresh layout
         self.setResizeMode(self.Adjust)
-        # 设置选择模式，可以多选
+        # enable multi selection
         self.setSelectionMode(self.ExtendedSelection)
-        # 双击事件
+        # double click event
         self.itemDoubleClicked.connect(lambda x: tools.load_control(x.name))
-        # 更新组件
+        # update elements
         self.update_shapes()
 
     def update_shapes(self):
-        # 清空原有组件
+        # clear original menu
         self.clear()
-        # __file__为当前代码文件路径
-        # 通过相对路径获取控制器图标路径
+        # get data folder path
         data_dir = os.path.abspath(__file__ + "/../data/")
-        # 遍历文件夹下的文件
+        # loop data folder item
         for file_name in os.listdir(data_dir):
-            # 过滤掉非图片
+            # escape non-jpg file
             if not file_name.endswith(".jpg"):
                 continue
-            # 获取图标路径
+            # get icon path
             jpg_file = os.path.join(data_dir, file_name)
-            # 创建item
+            # build icon
             item = QListWidgetItem(QIcon(jpg_file), "", self)
-            # 记录文件名
+            # record file name
             name, _ = os.path.splitext(file_name)
             item.name = name
-            # 设置item尺寸
+            # set icon size
             item.setSizeHint(QSize(67, 67))
 
     def contextMenuEvent(self, event):
         QListWidget.contextMenuEvent(self, event)
-        # 创建右键菜单
+        # build right click menu
         menu = QMenu(self)
-        menu.addAction(u"上传控制器", tools.upload_control)
-        menu.addAction(u"删除控制器", lambda: tools.delete_controls([item.name for item in self.selectedItems()]))
+        menu.addAction(u"upload controller", tools.upload_control)
+        menu.addAction(u"delete controller", lambda: tools.delete_controls([item.name for item in self.selectedItems()]))
         menu.exec_(event.globalPos())
         self.update_shapes()
 
@@ -100,34 +99,34 @@ index_rgb_map = [
 
 
 class ColorList(QListWidget):
-    # 颜色列表
+    # color list
     def __init__(self):
         QListWidget .__init__(self)
-        # 关闭横纵向滑条
+        # banned horizontal scroll bar
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # 设置列表组件为图标模式
+        # set to icon mode
         self.setViewMode(self.IconMode)
-        # 设置禁止移动
+        # banned movement
         self.setMovement(self.Static)
-        # 设置图标尺寸
+        # set icon size
         self.setIconSize(QSize(32, 32))
-        # 设置图标排列实施更新
+        # open refresh layout
         self.setResizeMode(self.Adjust)
-        # 锁定高度
-        self.setFixedHeight(35*4)
+        # lock height
+        self.setFixedHeight(35*2.2)
         for i, rgb in enumerate(index_rgb_map):
-            # 生成纯色图标
-            pix = QPixmap(32, 32)
+            # create pure color icon
+            pix = QPixmap(32, 16)
             pix.fill(QColor.fromRgbF(*rgb))
             item = QListWidgetItem(QIcon(pix), "", self)
-            # 设置item尺寸，item尺寸比图标大，图标之间才会有间距
-            item.setSizeHint(QSize(35, 34))
+            # set item size, bigger than icon go get some gap
+            item.setSizeHint(QSize(35, 17))
         self.itemDoubleClicked.connect(lambda x: tools.set_color(self.indexFromItem(x).row()))
 
 
 def get_app():
-    # 获取maya主窗口
+    # get maya menu
     top = QApplication.activeWindow()
     if top is None:
         return
@@ -139,7 +138,6 @@ def get_app():
 
 
 def q_add(layout, *elements):
-    # 自动判断元素element是布局还是组件，添加到布局layout中
     for elem in elements:
         if isinstance(elem, QLayout):
             layout.addLayout(elem)
@@ -149,7 +147,7 @@ def q_add(layout, *elements):
 
 
 def q_button(text, action):
-    # 创建并返回按钮，设置按钮名称和点击事件
+    # create and return button, set button name and click event
     but = QPushButton(text)
     but.clicked.connect(action)
     return but
@@ -160,19 +158,35 @@ class ControlsWindow(QDialog):
     def __init__(self):
         QDialog .__init__(self, get_app())
         self.setWindowTitle("controls")
-        self.resize(QSize(307, 472))
-        self.setLayout(q_add(
+        self.resize(QSize(318, 470))
+
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(10)
+        self.slider.setValue(1)
+        self.slider.valueChanged.connect(tools.line_with_control)
+
+        sl_label = QLabel("Line With:")
+        sl_layout = QHBoxLayout()
+        sl_layout.addWidget(sl_label)
+        sl_layout.addWidget(self.slider)
+
+        layout = QVBoxLayout()
+        layout.addLayout(q_add(
             QVBoxLayout(),
             ShapeList(),
             ColorList(),
+            sl_layout,
             q_add(
                 QHBoxLayout(),
-                q_button(u"缩放", tools.scale_control),
-                q_button(u"镜像", tools.mirror_control),
-                q_button(u"替换", tools.replace_control),
-                q_button(u"冻结", tools.freeze_control),
+                q_button(u"scale", tools.scale_control),
+                q_button(u"mirror", tools.mirror_control),
+                q_button(u"replace", tools.replace_control),
+                q_button(u"freeze", tools.freeze_control),
             ),
         ))
+        self.setLayout(layout)
+
         for but in self.findChildren(QPushButton):
             but.setMinimumWidth(20)
 
@@ -181,9 +195,6 @@ window = None
 
 
 def show():
-    u"""
-    显示界面:
-    """
     global window
     if window is None:
         window = ControlsWindow()
