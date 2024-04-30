@@ -1,10 +1,8 @@
-rename folder as ctrlLib
+rename folder as controlLib
 
-copy to document/maya/scripts
+move folder to C:\Users\***\Documents\maya\scripts
 
-open maya and create a python buffer
-
-run code below
+open maya and create a python buffer, run code below
 
 import controlLib
 
