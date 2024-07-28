@@ -32,7 +32,7 @@ class Control(object):
                 ("o", "offset"), ("l", "locked"), ("ou", "outputs")]
 
         # try to get value from long, short, index words
-        for index,(short, long) in enumerate (keys):
+        for index,(short, long) in enumerate(keys):
             arg = kwargs.get(long, None)
             if arg is None:
                 arg = kwargs.get(short, None)

@@ -1,5 +1,6 @@
 from maya import cmds
 from .control import Control
+from . import constraints
 import os
 import json
 
@@ -12,18 +13,19 @@ def undo(fun):
     The nested function will first receive the input value in (*args, **kwargs)
     """
     def undo_fun(*args, **kwargs):
-        #open undo record
+        # open undo record
         cmds.undoInfo(openChunk=1)
-        #save current selected object
+        # save current selected object
         long_name = cmds.ls(sl=1, l=1)
-        #call input function
+        # call input function
         fun(*args, **kwargs)
-        #keep selection
+        # keep selection
         cmds.select(cmds.ls(long_name))
-        #close undo record
+        # close undo record
         cmds.undoInfo(closeChunk=1)
 
     return undo_fun
+
 
 def set_selected_controls(*args, **kwargs):
     # get selected node or joint
@@ -36,14 +38,17 @@ def set_selected_controls(*args, **kwargs):
         Control(ctrl, **kwargs)
     cmds.dgdirty(controls)
 
+
 @undo
 def set_color(color):
     set_selected_controls(color=color)
+
 
 @undo
 def load_control(shape):
     cmds.ls(sl=1, l=1, type=["joint", "transform"]) or cmds.group(em=1, n=shape)
     set_selected_controls("color", "outputs", "radius", shape=shape)
+
 
 @undo
 def upload_control():
@@ -109,6 +114,7 @@ def upload_control():
         # delete temp controller
         cmds.delete(temp.get_transform())
 
+
 @undo
 def delete_controls(shapes):
     for s in shapes:
@@ -121,9 +127,11 @@ def delete_controls(shapes):
         if os.path.isfile(path):
             os.remove(path)
 
+
 @undo
 def scale_control():
     set_selected_controls(radius=cmds.softSelect(q=1, ssd=1))
+
 
 @undo
 def mirror_control():
@@ -150,12 +158,14 @@ def replace_control():
     if controls:
         set_selected_controls("color", "outputs", shape=Control(controls[-1]).get_shape())
 
+
 @undo
 def freeze_control():
     controls = cmds.ls(sl=1, l=1, type=["joint", "transform"])
     for ctrl in controls:
         Control(ctrl).edit_shape_by_copy_ctrl(lambda copy_ctrl: cmds.xform(copy_ctrl, m=cmds.xform(ctrl, q=1, m=1)))
         cmds.xform(ctrl, ws=0, m=[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+
 
 @undo
 def line_with_control(weight):
@@ -164,3 +174,40 @@ def line_with_control(weight):
         return
     for shape in controls:
         cmds.setAttr(shape + ".lineWidth", weight)
+
+@undo
+def renamer(prefix=None, typ=None):
+    selectList = cmds.ls(sl=True)
+    for index, i in enumerate(selectList):
+        cmds.rename(i, "{0}_{1}_{2}".format(prefix, (index + 1), typ))
+
+@undo
+def creat_ctrl(**kwargs):
+    constraints.objectCtrlorCreate(**kwargs)
+
+
+@undo
+def creat_polerVec(**kwargs):
+    constraints.polerVecCreate(**kwargs)
+
+
+@undo
+def creat_curLoc(**kwargs):
+    constraints.curGenerateLoc(**kwargs)
+
+
+@undo
+def creat_curJnt(**kwargs):
+    constraints.curGenerateJon(**kwargs)
+
+
+@undo
+def creat_curClu(**kwargs):
+    constraints.curGenerateCluster(**kwargs)
+
+
+
+
+
+
+
