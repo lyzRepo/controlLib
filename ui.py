@@ -92,7 +92,7 @@ class ShapeListWindow(QWidget):
     def createConnections(self):
         self.shapeList.itemDoubleClicked.connect(lambda x: tools.load_control(x.name))
         self.colorList.itemDoubleClicked.connect(lambda x: tools.set_color(self.colorList.indexFromItem(x).row()))
-        self.curWithSld.sliderReleased.connect(tools.line_with_control)
+        self.curWithSld.valueChanged.connect(tools.line_with_control)
         self.scaleBtn.clicked.connect(tools.scale_control)
         self.mirrorBtn.clicked.connect(tools.mirror_control)
         self.replaceBtn.clicked.connect(tools.replace_control)
